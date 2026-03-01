@@ -6,11 +6,14 @@ use regex::Regex;
 use std::collections::HashMap;
 use std::fs;
 use std::panic::{catch_unwind, AssertUnwindSafe};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, RwLock};
 use std::thread;
 
 static CSS_VARIABLES: Lazy<Arc<RwLock<HashMap<String, (u8, u8, u8)>>>> =
     Lazy::new(|| Arc::new(RwLock::new(HashMap::new())));
+static CSS_SCAN_STARTED: AtomicBool = AtomicBool::new(false);
+static SETUP_DONE: AtomicBool = AtomicBool::new(false);
 
 static NAMED_COLORS: Lazy<HashMap<&'static str, (u8, u8, u8)>> = Lazy::new(|| {
     let mut m = HashMap::new();
@@ -327,6 +330,15 @@ fn scan_workspace() {
     });
 }
 
+fn scan_workspace_once() {
+    if CSS_SCAN_STARTED
+        .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
+        .is_ok()
+    {
+        scan_workspace();
+    }
+}
+
 fn highlight_buffer(buf: &mut Buffer) {
     let _ = catch_unwind(AssertUnwindSafe(|| {
         let ns_id = api::create_namespace("neocolor");
@@ -368,6 +380,10 @@ fn highlight_buffer(buf: &mut Buffer) {
             | "javascriptreact" | "typescriptreact" | "vue" | "svelte" => true,
             _ => false,
         };
+
+        if is_css_ft {
+            scan_workspace_once();
+        }
 
         for (i, line) in lines.iter().enumerate() {
             for mat in hex_re.find_iter(line) {
@@ -461,7 +477,12 @@ fn neocolor_lib() -> Result<Dictionary> {
     // Rust-side setup takes NO arguments
     let setup: Function<(), ()> = Function::from_fn(|_| {
         let _ = catch_unwind(AssertUnwindSafe(|| {
-            scan_workspace();
+            if SETUP_DONE
+                .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
+                .is_err()
+            {
+                return;
+            }
             let callback = move |_args: AutocmdCallbackArgs| -> Result<bool> {
                 let _ = catch_unwind(AssertUnwindSafe(|| {
                     let mut buf = api::get_current_buf();
