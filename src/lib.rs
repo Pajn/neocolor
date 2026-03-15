@@ -310,7 +310,7 @@ fn scan_workspace() {
             if entry.file_type().is_some_and(|ft| ft.is_file()) {
                 let path = entry.path();
                 let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
-                if ext == "css" || ext == "scss" {
+                if matches!(ext, "css" | "scss" | "sass" | "less" | "postcss" | "styl") {
                     if let Ok(content) = fs::read_to_string(path) {
                         for caps in var_def_re.captures_iter(&content) {
                             let name = caps[1].to_string();
@@ -376,7 +376,7 @@ fn highlight_buffer(buf: &mut Buffer) {
                 .unwrap();
 
         let is_css_ft = match ft.as_str() {
-            "css" | "scss" | "sass" | "less" | "html" | "javascript" | "typescript"
+            "css" | "scss" | "sass" | "less" | "postcss" | "stylus" | "html" | "javascript" | "typescript"
             | "javascriptreact" | "typescriptreact" | "vue" | "svelte" => true,
             _ => false,
         };
@@ -387,8 +387,12 @@ fn highlight_buffer(buf: &mut Buffer) {
 
         for (i, line) in lines.iter().enumerate() {
             for mat in hex_re.find_iter(line) {
-                let hex = mat.as_str().trim_start_matches('#');
-                if let Some((r, g, b)) = parse_hex(hex) {
+                let hex_str = mat.as_str().trim_start_matches('#');
+                // Only color 3 and 4 character hex codes in CSS family files
+                if (hex_str.len() == 3 || hex_str.len() == 4) && !is_css_ft {
+                    continue;
+                }
+                if let Some((r, g, b)) = parse_hex(hex_str) {
                     apply_hl(buf, ns_id, i, mat.start(), mat.end(), r, g, b);
                 }
             }

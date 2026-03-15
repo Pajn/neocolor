@@ -4,7 +4,9 @@ A Rust-based Neovim plugin that highlights color values in real-time.
 
 ## Features
 
-- **Hex Colors:** `#440033`, `#RRGGBBAA`, `#RGB`, `#RGBA` (in any file)
+- **Hex Colors:**
+  - `#RRGGBB`, `#RRGGBBAA` (in any file)
+  - `#RGB`, `#RGBA` (only in CSS-family files: `css`, `scss`, `sass`, `less`, `postcss`, `stylus`, `html`, `js`, `ts`, `vue`, `svelte`, etc.)
 - **Rust Specific:**
   - `rgb(0x3c3c3c)`
   - `rgba(0x3c3c3cff)`
