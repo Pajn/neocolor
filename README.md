@@ -15,12 +15,25 @@ A Rust-based Neovim plugin that highlights color values in real-time.
 
 ## Installation (Lazy.nvim)
 
+#### Using prebuilt binaries (Recommended)
+
 ```lua
 {
   'Pajn/neocolor',
-  dev = true,
-  dir = '/path/to/neocolor', -- Path to this directory
-  config = true, -- Automatically calls setup({})
+  build = "./scripts/install.sh", -- Or "powershell ./scripts/install.ps1" on Windows
+  config = true,
+}
+```
+
+#### Building from source
+
+```lua
+{
+  'Pajn/neocolor',
+  -- On macOS, you might need:
+  -- build = "RUSTFLAGS='-C link-arg=-undefined -C link-arg=dynamic_lookup' cargo build --release && cp target/release/libneocolor.* lua/neocolor_lib.so",
+  build = "cargo build --release && cp target/release/libneocolor.* lua/neocolor_lib.so",
+  config = true,
 }
 ```
 
@@ -28,7 +41,8 @@ A Rust-based Neovim plugin that highlights color values in real-time.
 
 Inside the `neocolor` directory:
 ```bash
-RUSTFLAGS="-C link-arg=-undefined -C link-arg=dynamic_lookup -C link-arg=-L/path/to/libiconv" cargo build --release
-cp target/release/libneocolor.dylib lua/neocolor_lib.so
+cargo build --release
+cp target/release/libneocolor.dylib lua/neocolor_lib.so (macOS)
+cp target/release/libneocolor.so lua/neocolor_lib.so (Linux)
 ```
-*(Note: Use the correct path to libiconv for your system, e.g. in the Nix store if on NixOS/Darwin with Nix)*
+*(Note: On Windows, copy `target/release/neocolor.dll` to `lua/neocolor_lib.dll`)*
