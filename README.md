@@ -30,8 +30,6 @@ A Rust-based Neovim plugin that highlights color values in real-time.
 ```lua
 {
   'Pajn/neocolor',
-  -- On macOS, you might need:
-  -- build = "RUSTFLAGS='-C link-arg=-undefined -C link-arg=dynamic_lookup' cargo build --release && cp target/release/libneocolor.* lua/neocolor_lib.so",
   build = "cargo build --release && cp target/release/libneocolor.* lua/neocolor_lib.so",
   config = true,
 }

@@ -1,0 +1,14 @@
+# nvim-oxi links to Neovim/LuaJIT/libuv FFI symbols that only exist at runtime
+# (when the plugin is loaded into the nvim process). Each platform's linker needs
+# to be told not to fail on those undefined symbols:
+#   - Linux: ld allows undefined symbols in shared objects by default (no config)
+#   - macOS: ld needs -undefined dynamic_lookup
+#   - Windows: link.exe needs /FORCE:MULTIPLE
+[target.'cfg(target_os = "macos")']
+rustflags = ["-C", "link-arg=-undefined", "-C", "link-arg=dynamic_lookup"]
+
+[target.x86_64-pc-windows-msvc]
+rustflags = ["-C", "link-args=/FORCE:MULTIPLE"]
+
+[target.aarch64-pc-windows-msvc]
+rustflags = ["-C", "link-args=/FORCE:MULTIPLE"]
